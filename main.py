@@ -6,7 +6,7 @@ import re
 import json
 import os
 import time
-from deep_translator import GoogleTranslator
+import translatelib
 
 intents = discord.Intents.default()
 intents.message_content = True
@@ -563,7 +563,7 @@ async def translate(interaction: discord.Interaction, lang: str, text: str):
             ephemeral=True
        )
 
-@bot.tree.command(name="translate_message", description="Translate a message from its Discord link")
+@bot.tree.command(name="translate", description="Translate a message from its Discord link")
 async def translate_message(interaction: discord.Interaction, lang: str, message_link: str):
     try:
         # Split link into IDs
@@ -575,7 +575,7 @@ async def translate_message(interaction: discord.Interaction, lang: str, message
         channel = bot.get_channel(channel_id) or await bot.fetch_channel(channel_id)
         message = await channel.fetch_message(message_id)
 
-        translated = GoogleTranslator(source="auto", target=lang).translate(message.content)
+        translated = translatelib.translate(message.content, "auto", lang)
 
         await interaction.response.send_message(
             f"Original:\n{message.content}\n\nTranslated to `{lang}`:\n{translated}"
@@ -583,7 +583,34 @@ async def translate_message(interaction: discord.Interaction, lang: str, message
 
     except Exception as e:
         await interaction.response.send_message(
-            f"Could not translate that message: {e}",
+            f"An error occurred during translation: {e}",
+            ephemeral=True
+        )
+
+@bot.tree.command(name="hypertranslate", description="'Hypertranslate' a message from its Discord link")
+async def hypertranslate_message(interaction: discord.Interaction, lang: str, message_link: str, count: int):
+    try:
+        # Split link into IDs
+        parts = message_link.split("/")
+        guild_id = int(parts[-3])
+        channel_id = int(parts[-2])
+        message_id = int(parts[-1])
+
+        channel = bot.get_channel(channel_id) or await bot.fetch_channel(channel_id)
+        message = await channel.fetch_message(message_id)
+
+        translated = translatelib.hypertranslate(message.content, "auto", lang, count)
+        path = ""
+        for pathitem in translated.path:
+            path += pathitem + " -> "
+            
+        await interaction.response.send_message(
+            f"Original:\n{message.content}\n\nHypertranslated (`{path}`):\n{translated.text}"
+        )
+
+    except Exception as e:
+        await interaction.response.send_message(
+            f"An error occurred during translation: {e}",
             ephemeral=True
         )
 
