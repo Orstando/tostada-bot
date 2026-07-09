@@ -554,7 +554,7 @@ async def ping(interaction: discord.Interaction):
 @bot.tree.command(name="translate", description="Translate text to another language")
 async def translate(interaction: discord.Interaction, lang: str, text: str):
     try:
-        translated = GoogleTranslator(source="auto", target=lang).translate(text)
+        translated = translatelib.translate(text, "auto", lang)
         await interaction.response.send_message(
             f"Translated to `{lang}`:\n{translated}"
         )
@@ -564,7 +564,7 @@ async def translate(interaction: discord.Interaction, lang: str, text: str):
             ephemeral=True
        )
 
-@bot.tree.command(name="translate", description="Translate a message from its Discord link")
+@bot.tree.command(name="translatemsg", description="Translate a message from its Discord link")
 async def translate_message(interaction: discord.Interaction, lang: str, message_link: str):
     try:
         # Split link into IDs
@@ -588,32 +588,22 @@ async def translate_message(interaction: discord.Interaction, lang: str, message
             ephemeral=True
         )
 
-@bot.tree.command(name="hypertranslate", description="'Hypertranslate' a message from its Discord link")
-async def hypertranslate_message(interaction: discord.Interaction, lang: str, message_link: str, count: int):
+@bot.tree.command(name="hypertranslate", description="'Hypertranslate' text to another language")
+async def hypertranslate(interaction: discord.Interaction, text: str, lang: str, count: int):
     try:
-        # Split link into IDs
-        parts = message_link.split("/")
-        guild_id = int(parts[-3])
-        channel_id = int(parts[-2])
-        message_id = int(parts[-1])
-
-        channel = bot.get_channel(channel_id) or await bot.fetch_channel(channel_id)
-        message = await channel.fetch_message(message_id)
-
-        translated = translatelib.hypertranslate(message.content, "auto", lang, count)
+        translated = translatelib.hypertranslate(text, "auto", lang, count)
         path = ""
-        for pathitem in translated.path:
+        for pathitem in translated["path"]:
             path += pathitem + " -> "
-            
+        path = path.rstrip(" -> ") # remove trailing " -> "
         await interaction.response.send_message(
-            f"Original:\n{message.content}\n\nHypertranslated (`{path}`):\n{translated.text}"
+            f"Hypertranslated to `{lang}`:\n{translated["text"]}\n(`{path}`)"
         )
-
     except Exception as e:
         await interaction.response.send_message(
-            f"An error occurred during translation: {e}",
+            f"Translation failed: {e}",
             ephemeral=True
-        )
+       )
 
 async def get_or_create_role(guild: discord.Guild) -> discord.Role:
     role = discord.utils.get(guild.roles, name=ROLE_NAME)
