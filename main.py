@@ -435,12 +435,15 @@ async def guilds(
         ephemeral=True
     )
 
+self_uwulocked = []
+
 @bot.tree.command(name="free", description="Remove uwu effect from a user")
 @app_commands.describe(member="User to free")
 async def free(interaction: discord.Interaction, member: discord.Member):
     if not is_admin(interaction) and not member.id == interaction.user.id:
-        return await interaction.response.send_message("No permission.", ephemeral=True)
-
+        if not interaction.user.id in self_uwulocked:
+            return await interaction.response.send_message("No permission.", ephemeral=True)
+        
     guild_data = get_guild(interaction.guild.id)
     uid = str(member.id)
 
@@ -458,7 +461,10 @@ async def free(interaction: discord.Interaction, member: discord.Member):
         if role.name.lower() == "uwued":
             await member.remove_roles(role)
             removed_roles.append(role.name)
-
+            
+    if interaction.user.id in self_uwulocked:
+        self_uwulocked.remove(interaction.user.id)
+        
     if deleted or removed_roles:
         await interaction.response.send_message(
             f"{member.display_name} has been freed ✨"
@@ -485,6 +491,8 @@ async def uwulock(interaction: discord.Interaction, member: discord.Member, mode
     else:
         users[uid] = {"expiry": float("inf"), "mode": mode}
         msg = f"Locked {member.display_name} with mode '{mode}'"
+        if  member.id == interaction.user.id and not interaction.user.id in self_uwulocked:
+            self_uwulocked.append(interaction.user.id)
 
     save_data()
     await interaction.response.send_message(msg)
