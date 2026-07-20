@@ -7,6 +7,7 @@ import json
 import os
 import time
 import translatelib
+from dotenv import load_dotenv
 
 intents = discord.Intents.default()
 intents.message_content = True
@@ -20,8 +21,9 @@ DATA_FILE = "uwu_data.json"
 data = {}
 ROLE_NAME = "uwu mod"
 URL_REGEX = re.compile(r"https?://\S+|www\.\S+")
-OWNER_USER_ID = 1123319890753896498
-BOT_TOKEN = "token"
+load_dotenv()
+OWNER_USER_ID = os.getenv("OWNER_USER_ID")
+BOT_TOKEN = os.getenv("BOT_TOKEN")
 
 # persistence
 
